@@ -85,7 +85,12 @@ export default function ClarifyForm({ data, disabled = false, onSubmit }: Props)
     return parts.join(', ');
   };
 
-  const canSubmit = !disabled && single('location').length > 0;
+  // Gửi được khi: có địa điểm (từ field location HOẶC defaults khoá sẵn ở Bước 3) VÀ mọi field
+  // bắt buộc đã điền (vd Bước 3 khoá tỉnh nhưng bắt buộc chọn số ngày → chặn vòng lặp hỏi lại).
+  const requiredFilled = data.fields.every(f =>
+    !f.required || (f.type === 'multiselect' ? multi(f.key).length > 0 : single(f.key).length > 0)
+  );
+  const canSubmit = !disabled && single('location').length > 0 && requiredFilled;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
