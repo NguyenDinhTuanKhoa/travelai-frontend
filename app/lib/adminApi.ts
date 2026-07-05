@@ -76,6 +76,18 @@ export const adminApi = {
   bulkDeleteDestinations: (ids: string[]) =>
     fetchAdmin('/destinations/bulk', { method: 'DELETE', body: JSON.stringify({ ids }) }),
 
+  // ===== Specialties (Đặc sản / Món ăn theo tỉnh) =====
+  getSpecialties: (params: { page?: number; search?: string; region?: string } = {}) =>
+    fetchAdmin(`/specialties${qs(params)}`),
+  createSpecialty: (data: object) =>
+    fetchAdmin('/specialties', { method: 'POST', body: JSON.stringify(data) }),
+  updateSpecialty: (id: string, data: object) =>
+    fetchAdmin(`/specialties/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSpecialty: (id: string) =>
+    fetchAdmin(`/specialties/${id}`, { method: 'DELETE' }),
+  bulkDeleteSpecialties: (ids: string[]) =>
+    fetchAdmin('/specialties/bulk', { method: 'DELETE', body: JSON.stringify({ ids }) }),
+
   // ===== Reviews =====
   getReviews: (params: { page?: number; rating?: number; destinationId?: string; dateFrom?: string; dateTo?: string } = {}) =>
     fetchAdmin(`/reviews${qs(params)}`),
