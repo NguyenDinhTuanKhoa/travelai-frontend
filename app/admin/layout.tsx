@@ -90,7 +90,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Đóng drawer mobile mỗi khi chuyển trang
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'admin')) {
@@ -111,19 +115,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname?.startsWith(href);
   };
 
+  // Sidebar hiển thị đầy đủ (chữ + nhãn) khi: desktop đang mở, HOẶC đang mở drawer mobile
+  const expanded = sidebarOpen || mobileOpen;
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans">
       <ToastContainer />
 
+      {/* ── BACKDROP (chỉ mobile khi mở drawer) ───────────────────────── */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-30 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* ── SIDEBAR ───────────────────────────────────────────────────── */}
       <aside
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-100 text-gray-600 transition-all duration-300 flex flex-col fixed h-screen z-30`}
+        className={`bg-white border-r border-gray-100 text-gray-600 transition-all duration-300 flex flex-col fixed h-screen z-40
+          w-64 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}
       >
         {/* Logo */}
         <div className="p-4 border-b border-gray-100 shrink-0 h-16 flex items-center">
           <Link href="/admin" className="flex items-center gap-3">
             <Image src="/logonew.png" alt="Logo" width={36} height={36} className="rounded-xl shrink-0" />
-            {sidebarOpen && (
+            {expanded && (
               <span className="text-lg font-bold tracking-tight text-gray-800">
                 Travel<span className="text-blue-600">AI</span>
                 <span className="ml-1.5 text-[10px] uppercase tracking-widest text-gray-400 align-top">Admin</span>
@@ -141,19 +158,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     className={`flex items-center ${
-                      sidebarOpen ? 'gap-3.5 px-4 py-3 mx-1' : 'justify-center w-11 h-11 mx-auto'
+                      expanded ? 'gap-3.5 px-4 py-3 mx-1' : 'justify-center w-11 h-11 mx-auto'
                     } rounded-xl transition-all duration-200 group relative ${
                       active
                         ? 'bg-blue-600 text-white font-medium shadow-sm shadow-blue-100'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
-                    title={!sidebarOpen ? item.name : undefined}
+                    title={!expanded ? item.name : undefined}
                   >
                     <span className="shrink-0 transition-transform duration-200 group-hover:scale-105">
                       {getIcon(item.name, active)}
                     </span>
-                    {sidebarOpen && <span className="text-sm tracking-wide">{item.name}</span>}
+                    {expanded && <span className="text-sm tracking-wide">{item.name}</span>}
                   </Link>
                 </li>
               );
@@ -165,7 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-3 border-t border-gray-100 space-y-1 shrink-0">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`w-full flex items-center ${
+            className={`w-full hidden lg:flex items-center ${
               sidebarOpen ? 'justify-start gap-3.5 px-4' : 'justify-center w-11 h-11 mx-auto'
             } py-2.5 hover:bg-gray-100 rounded-xl transition-all duration-200 text-gray-600 group`}
             title={sidebarOpen ? 'Thu gọn' : 'Mở rộng'}
@@ -186,7 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link
             href="/"
             className={`flex items-center ${
-              sidebarOpen ? 'justify-start gap-3.5 px-4' : 'justify-center w-11 h-11 mx-auto'
+              expanded ? 'justify-start gap-3.5 px-4' : 'justify-center w-11 h-11 mx-auto'
             } py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-all duration-200 group`}
             title="Về trang chủ"
           >
@@ -195,24 +213,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
             </span>
-            {sidebarOpen && <span className="text-sm tracking-wide">Về trang chủ</span>}
+            {expanded && <span className="text-sm tracking-wide">Về trang chủ</span>}
           </Link>
         </div>
       </aside>
 
       {/* ── MAIN ──────────────────────────────────────────────────────── */}
-      <main className={`flex-1 ${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300 min-h-screen flex flex-col`}>
+      <main className={`flex-1 ml-0 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} transition-all duration-300 min-h-screen flex flex-col`}>
         {/* Header */}
         <header className="bg-white sticky top-0 z-20 shrink-0 border-b border-gray-100 h-16 flex items-center">
-          <div className="px-6 py-3 flex items-center gap-4 w-full">
-            <div className="min-w-0 shrink-0">
+          <div className="px-4 lg:px-6 py-3 flex items-center gap-3 lg:gap-4 w-full">
+            {/* Hamburger — chỉ hiện trên mobile/tablet */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              aria-label="Mở menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+              </svg>
+            </button>
+
+            <div className="min-w-0 shrink-0 hidden sm:block">
               <h1 className="text-base font-semibold text-gray-800 leading-tight">Admin Panel</h1>
               <div className="mt-0.5 flex items-center gap-2">
                 <Breadcrumbs />
               </div>
             </div>
 
-            <div className="flex-1 flex justify-center">
+            <div className="flex-1 flex justify-center min-w-0">
               <GlobalSearch />
             </div>
 
@@ -262,7 +291,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <div className="p-6 flex-1">{children}</div>
+        <div className="p-4 sm:p-6 flex-1">{children}</div>
       </main>
     </div>
   );
