@@ -72,6 +72,36 @@ const parseItineraryDays = (text: string): number | null => {
   }
 };
 
+// ── "Gần tôi": parse block ```json_nearby``` → danh sách card (tái dùng DestinationMiniCard) ──
+const parseNearby = (text: string): { items: DestinationMini[]; needLocation: boolean } | null => {
+  const m = text.match(/```json_nearby\s*([\s\S]*?)```/);
+  if (!m) return null;
+  try {
+    const data = JSON.parse(m[1].trim());
+    if (data?.type !== 'nearby') return null;
+    return { items: Array.isArray(data.items) ? (data.items as DestinationMini[]) : [], needLocation: !!data.needLocation };
+  } catch {
+    return null;
+  }
+};
+
+// Bắt ý định "tìm ... gần tôi" phía client (mirror backend) → để xin GPS TRƯỚC khi gửi.
+const NEARBY_PROXIMITY_RE = /gần tôi|gần đây|gần nhất|quanh đây|quanh tôi|xung quanh|chỗ tôi|gần chỗ|gần khu vực|lân cận|ở gần/i;
+const NEARBY_TYPE_RE = /quán ăn|nhà hàng|ăn uống|quán nhậu|đồ ăn|quán cơm|quán phở|quán bún|cà phê|cafe|coffee|quán nước|nhà nghỉ|khách sạn|homestay|resort|chỗ nghỉ|chỗ ngủ|nhà trọ/i;
+const detectNearbyIntent = (text: string): boolean =>
+  NEARBY_PROXIMITY_RE.test(text) && NEARBY_TYPE_RE.test(text);
+
+// Lấy vị trí GPS người dùng (Promise). Reject nếu bị từ chối / không hỗ trợ / quá 8s.
+const getUserLocation = (): Promise<{ lat: number; lng: number }> =>
+  new Promise((resolve, reject) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return reject(new Error('no geolocation'));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) => reject(err),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  });
+
 const quickQuestions = [
   '🏖️ Gợi ý điểm đến biển đẹp',
   '🏔️ Du lịch Sapa cần chuẩn bị gì?',
@@ -536,6 +566,9 @@ export default function AIChatPage() {
         loaded.forEach((msg, idx) => {
           if (msg.role !== 'assistant' || !msg.content) return;
           if (msg.clarifyForm) return; // form làm rõ → không có card điểm đến
+          // "Gần tôi": khôi phục card (kèm khoảng cách) từ block json_nearby trong content GỐC.
+          const nearby = parseNearby(rawMsgs[idx]?.content || '');
+          if (nearby) { if (nearby.items.length) persisted[msg.id] = nearby.items; return; }
           const raw = rawMsgs[idx]?.destinations;
           // Lọc null (destination đã bị xóa khỏi DB → populate trả null)
           const cards = Array.isArray(raw)
@@ -662,10 +695,17 @@ export default function AIChatPage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (isAuthed && freshToken) headers['Authorization'] = `Bearer ${freshToken}`;
 
+      // "Tìm ... gần tôi" → xin vị trí GPS. Từ chối/không hỗ trợ → gửi không kèm location,
+      // backend trả nhánh nhắc bật vị trí.
+      let userLoc: { lat: number; lng: number } | null = null;
+      if (detectNearbyIntent(content)) {
+        userLoc = await getUserLocation().catch(() => null);
+      }
+
       const res = await fetch(`${API_URL}/ai/chat/stream`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ messages: apiMessages, chatId: chatId || undefined }),
+        body: JSON.stringify({ messages: apiMessages, chatId: chatId || undefined, location: userLoc || undefined }),
         signal: ac.signal,
       });
 
@@ -755,7 +795,14 @@ export default function AIChatPage() {
       ));
       // Form làm rõ KHÔNG phải gợi ý điểm đến → không trích card (kẻo lời mở đầu kiểu
       // "gợi ý bãi biển hợp ý" khớp nhầm địa danh tên "Bãi biển").
-      if (!clarifyForm) fetchMentionedDestinations(aiMsgId, finalContent, content);
+      // "Gần tôi": card đã nằm sẵn trong block json_nearby (kèm khoảng cách) → dùng thẳng,
+      // KHÔNG gọi /from-text.
+      const nearby = parseNearby(rawBuffer);
+      if (nearby) {
+        if (nearby.items.length) setMsgDestinations(prev => ({ ...prev, [aiMsgId]: nearby.items }));
+      } else if (!clarifyForm) {
+        fetchMentionedDestinations(aiMsgId, finalContent, content);
+      }
       if (isAuthed) loadChatHistories();
 
     } catch (error: any) {
@@ -1068,29 +1115,34 @@ export default function AIChatPage() {
                   )}
 
                   {/* ── Destination Mini Cards ── */}
-                  {message.role === 'assistant' && message.id !== 'welcome' && msgDestinations[message.id]?.length > 0 && (
+                  {message.role === 'assistant' && message.id !== 'welcome' && msgDestinations[message.id]?.length > 0 && (() => {
+                    const dests = msgDestinations[message.id];
+                    // "Gần tôi": card có khoảng cách → đổi nhãn + ẩn nút tạo lịch trình (không hợp ngữ cảnh).
+                    const isNearby = dests.some(d => d.distanceKm != null);
+                    return (
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <p className="text-xs text-gray-500 flex items-center gap-1.5 font-medium">
-                          <span>📍</span> Điểm đến được nhắc đến
+                          <span>📍</span> {isNearby ? 'Địa điểm gần bạn' : 'Điểm đến được nhắc đến'}
                         </p>
-                        {user && (
+                        {user && !isNearby && (
                           <button
-                            onClick={() => handleQuickCreateFromDests(msgDestinations[message.id], message.content, message.itineraryDays)}
+                            onClick={() => handleQuickCreateFromDests(dests, message.content, message.itineraryDays)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-semibold rounded-lg shadow-sm hover:shadow-md hover:scale-105 transition-all"
-                            title={`Tạo lịch trình với ${msgDestinations[message.id].length} điểm đến`}
+                            title={`Tạo lịch trình với ${dests.length} điểm đến`}
                           >
-                            🗺️ Tạo lịch trình ngay ({msgDestinations[message.id].length})
+                            🗺️ Tạo lịch trình ngay ({dests.length})
                           </button>
                         )}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {msgDestinations[message.id].map(dest => (
-                          <DestinationMiniCard key={dest._id} destination={dest} />
+                        {dests.map((dest, i) => (
+                          <DestinationMiniCard key={dest._id ?? `${dest.name}-${i}`} destination={dest} />
                         ))}
                       </div>
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             ))

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import FallbackImage from './FallbackImage';
 
 export interface DestinationMini {
-  _id: string;
+  _id: string | null;
   name: string;
   images: string[];
   location: { city: string; country: string; coordinates?: { lat: number; lng: number } };
@@ -13,6 +13,8 @@ export interface DestinationMini {
   rating: number;
   priceRange?: string;
   description?: string;
+  distanceKm?: number;                 // "gần tôi": khoảng cách tới user (km)
+  external?: { mapsUrl: string };      // kết quả live (Serper/SerpApi) — không có trong DB
 }
 
 const categoryMap: Record<string, { label: string; icon: string; color: string }> = {
@@ -85,6 +87,12 @@ export default function DestinationMiniCard({ destination, onLoginRequired }: Pr
         />
         {/* Category badge overlay */}
         <div className="absolute bottom-1.5 left-1.5 text-sm">{cat.icon}</div>
+        {/* Khoảng cách (chế độ "gần tôi") */}
+        {destination.distanceKm != null && (
+          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-black/65 text-white text-[9px] font-bold leading-none">
+            📍 {destination.distanceKm} km
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -100,26 +108,41 @@ export default function DestinationMiniCard({ destination, onLoginRequired }: Pr
 
         {/* Action buttons */}
         <div className="flex items-center gap-1.5 mt-2">
-          <Link
-            href={`/destinations/${destination._id}`}
-            target="_blank"
-            className="flex-1 text-center text-[10px] font-bold py-1 px-2 bg-sky-50 hover:bg-sky-100 text-sky-600 rounded-lg transition-all border border-sky-100 hover:border-sky-200"
-            onClick={e => e.stopPropagation()}
-          >
-            Xem chi tiết
-          </Link>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={`text-[10px] py-1 px-2 rounded-lg transition-all border font-bold shrink-0 ${
-              saved
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                : 'bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-red-500 border-gray-200 hover:border-red-200'
-            }`}
-            title={saved ? 'Đã lưu' : 'Lưu điểm đến'}
-          >
-            {saving ? '⏳' : saved ? '❤️' : '🤍'}
-          </button>
+          {destination.external ? (
+            // Kết quả live (Serper/SerpApi) — không có trong DB → chỉ đường Google Maps, không lưu.
+            <a
+              href={destination.external.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center text-[10px] font-bold py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg transition-all border border-emerald-100 hover:border-emerald-200"
+              onClick={e => e.stopPropagation()}
+            >
+              🧭 Chỉ đường
+            </a>
+          ) : (
+            <>
+              <Link
+                href={`/destinations/${destination._id}`}
+                target="_blank"
+                className="flex-1 text-center text-[10px] font-bold py-1 px-2 bg-sky-50 hover:bg-sky-100 text-sky-600 rounded-lg transition-all border border-sky-100 hover:border-sky-200"
+                onClick={e => e.stopPropagation()}
+              >
+                Xem chi tiết
+              </Link>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className={`text-[10px] py-1 px-2 rounded-lg transition-all border font-bold shrink-0 ${
+                  saved
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    : 'bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-red-500 border-gray-200 hover:border-red-200'
+                }`}
+                title={saved ? 'Đã lưu' : 'Lưu điểm đến'}
+              >
+                {saving ? '⏳' : saved ? '❤️' : '🤍'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
