@@ -480,12 +480,20 @@ export default function ItineraryPage() {
                   ✕ Xóa tìm kiếm
                 </button>
               ) : (
-                <Link
-                  href="/ai-chat"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-violet-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-sky-500/30 transition-all hover:scale-105"
-                >
-                  🤖 Chat với AI để tạo lịch trình
-                </Link>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link
+                    href="/ai-chat"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-violet-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-sky-500/30 transition-all hover:scale-105"
+                  >
+                    🤖 Chat với AI để tạo lịch trình
+                  </Link>
+                  <Link
+                    href="/itinerary/create"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-800 font-semibold rounded-xl border border-gray-200 hover:border-sky-300 hover:shadow-lg transition-all hover:scale-105"
+                  >
+                    ✍️ Tạo thủ công
+                  </Link>
+                </div>
               )}
             </div>
           ) : (
@@ -628,12 +636,18 @@ export default function ItineraryPage() {
           )}
 
           {/* ── Floating CTA ── */}
-          <div className="mt-10 text-center">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/ai-chat"
               className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-sky-500 to-violet-600 text-white font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/30 transition-all hover:scale-105 text-lg"
             >
               🤖 Tạo lịch trình mới với AI
+            </Link>
+            <Link
+              href="/itinerary/create"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-white text-gray-800 font-bold rounded-2xl shadow-lg border border-gray-200 hover:border-sky-300 hover:shadow-xl transition-all hover:scale-105 text-lg"
+            >
+              ✍️ Tạo thủ công
             </Link>
           </div>
         </div>
