@@ -10,12 +10,14 @@ import { getSavedTours, removeSavedTour, SAVED_TOURS_EVENT, type SavedTour } fro
 import { useTourStatus, setTourStatus } from '../lib/tourProgress';
 import { TOUR_IMAGE_FALLBACK, onTourImageError } from '../lib/imageFallback';
 import TourDetailModal from '../components/TourDetailModal';
+import AddToItineraryModal from '../components/AddToItineraryModal';
+import { saveNavPayload } from '../lib/navHandoff';
 
 interface Destination {
   _id: string;
   name: string;
   images: string[];
-  location: { city: string; country: string };
+  location: { city: string; country: string; coordinates?: { lat: number; lng: number } };
   category: string;
   rating: number;
   priceRange: string;
@@ -136,6 +138,22 @@ export default function SavedPage() {
   const [modalTab, setModalTab] = useState<'map' | 'reviews'>('map');
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
+  // Địa điểm đang mở modal "Thêm vào lịch trình" (null = đóng).
+  const [itineraryModalDestId, setItineraryModalDestId] = useState<string | null>(null);
+
+  // "Đi luôn": dẫn đường từ vị trí GPS hiện tại tới địa điểm đã lưu (/navigate tự lấy GPS).
+  const handleGoNow = (dest: Destination) => {
+    saveNavPayload({
+      title: `Đường tới ${dest.name}`,
+      waypoints: [{
+        name: dest.name,
+        city: dest.location?.city,
+        lat: dest.location?.coordinates?.lat,
+        lng: dest.location?.coordinates?.lng,
+      }],
+    });
+    router.push('/navigate');
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -350,6 +368,22 @@ export default function SavedPage() {
                                 ❤️
                               </button>
                             </div>
+                            {/* Hành động: thêm vào lịch trình + đi luôn (dẫn đường GPS) */}
+                            <div className="flex items-center gap-2 mt-3">
+                              <button
+                                onClick={() => setItineraryModalDestId(dest._id)}
+                                className="flex-1 py-2 px-3 bg-sky-50 hover:bg-sky-100 text-sky-600 rounded-lg text-sm font-semibold border border-sky-100 hover:border-sky-200 transition-all"
+                              >
+                                📅 Thêm vào lịch trình
+                              </button>
+                              <button
+                                onClick={() => handleGoNow(dest)}
+                                className="py-2 px-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg text-sm font-semibold shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                                title="Dẫn đường từ vị trí của bạn tới đây"
+                              >
+                                🧭 Đi luôn
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -481,6 +515,11 @@ export default function SavedPage() {
           onClose={() => setSelectedTour(null)}
         />
       )}
+
+      <AddToItineraryModal
+        destinationId={itineraryModalDestId}
+        onClose={() => setItineraryModalDestId(null)}
+      />
     </div>
   );
 }

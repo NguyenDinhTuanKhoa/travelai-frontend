@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import FavoriteButton from './FavoriteButton';
 
 interface Destination {
   _id: string;
@@ -296,14 +297,7 @@ export default function Destinations() {
                   {categoryTags[dest.category] || dest.category}
                 </span>
 
-                <button
-                  onClick={(e) => e.preventDefault()}
-                  className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
+                <FavoriteButton destinationId={dest._id} />
 
                 <div className="absolute bottom-4 left-4 text-white">
                   <span className="text-2xl font-bold">{priceLabels[dest.priceRange] || 'Liên hệ'}</span>

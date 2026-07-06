@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { authApi, userApi } from '../lib/api';
+import { clearSavedIds } from '../lib/savedDestinations';
 
 interface User {
   _id: string;
@@ -185,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    clearSavedIds(); // reset cache "đã thích" để user sau không thấy tim của user trước
   };
 
   const updateUser = (updatedFields: Partial<User>) => {

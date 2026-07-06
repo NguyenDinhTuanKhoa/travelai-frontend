@@ -9,6 +9,7 @@ import { destinationApi, recommendationApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import dynamic from 'next/dynamic';
 import FallbackImage from '../components/FallbackImage';
+import FavoriteButton from '../components/FavoriteButton';
 
 const OSMMap = dynamic(() => import('../components/OSMMap'), { ssr: false });
 
@@ -396,14 +397,7 @@ function DestinationsContent() {
                   </span>
 
                   {/* Favorite Button */}
-                  <button 
-                    onClick={(e) => { e.preventDefault(); }}
-                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-lg group/fav"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+                  <FavoriteButton destinationId={dest._id} />
 
                   {/* Location & Name */}
                   <div className="absolute bottom-4 left-4 right-4">
