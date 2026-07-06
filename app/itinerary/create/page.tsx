@@ -189,11 +189,11 @@ export default function CreateItineraryPage() {
                 <div className="h-full flex items-center justify-center bg-gray-100 text-gray-400">Đang tải bản đồ...</div>
               ) : (
                 <Map
-                  destinations={filtered as any}
+                  destinations={filtered as never}
                   center={[16.0, 106.0]}
                   zoom={6}
                   height="100%"
-                  onMarkerClick={((d: Destination) => addDest(d)) as any}
+                  onMarkerClick={((d: Destination) => addDest(d)) as never}
                 />
               )}
             </div>

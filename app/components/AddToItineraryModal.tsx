@@ -38,11 +38,10 @@ export default function AddToItineraryModal({
   };
 
   // Nạp danh sách lịch trình mỗi khi mở modal (destinationId chuyển từ null → có).
+  // loadItineraries đặt state SAU await (bất đồng bộ) nên không gây cascading render.
   useEffect(() => {
-    if (destinationId) {
-      loadItineraries();
-      setNewItinerary({ title: '', startDate: '', endDate: '' });
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- setState nằm sau await trong loadItineraries (fetch-on-open), không đồng bộ
+    if (destinationId) loadItineraries();
   }, [destinationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddToItinerary = async (itineraryId: string) => {
@@ -58,6 +57,7 @@ export default function AddToItineraryModal({
       const data = await res.json();
       if (data.success) {
         alert('Đã thêm vào lịch trình!');
+        setNewItinerary({ title: '', startDate: '', endDate: '' });
         onClose();
       } else {
         alert(data.message || 'Có lỗi xảy ra');
