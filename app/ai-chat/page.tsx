@@ -86,7 +86,7 @@ const parseNearby = (text: string): { items: DestinationMini[]; needLocation: bo
 };
 
 // Bắt ý định "tìm ... gần tôi" phía client (mirror backend) → để xin GPS TRƯỚC khi gửi.
-const NEARBY_PROXIMITY_RE = /gần tôi|gần đây|gần nhất|quanh đây|quanh tôi|xung quanh|chỗ tôi|gần chỗ|gần khu vực|lân cận|ở gần/i;
+const NEARBY_PROXIMITY_RE = /gần (tôi|tui|mình|tớ)|gần đây|gần nhất|quanh (đây|tôi|tui|mình)|xung quanh|chỗ (tôi|tui|mình)|gần chỗ|gần khu vực|gần vị trí|lân cận|ở gần|khu vực này/i;
 const NEARBY_TYPE_RE = /quán ăn|nhà hàng|ăn uống|quán nhậu|đồ ăn|quán cơm|quán phở|quán bún|cà phê|cafe|coffee|quán nước|nhà nghỉ|khách sạn|homestay|resort|chỗ nghỉ|chỗ ngủ|nhà trọ/i;
 const detectNearbyIntent = (text: string): boolean =>
   NEARBY_PROXIMITY_RE.test(text) && NEARBY_TYPE_RE.test(text);
