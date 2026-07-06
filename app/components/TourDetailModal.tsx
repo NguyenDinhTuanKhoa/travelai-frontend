@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { saveNavPayload } from '../lib/navHandoff';
 import { useAuth } from '../context/AuthContext';
 import { useTourStatus, setTourStatus } from '../lib/tourProgress';
+import { TOUR_IMAGE_FALLBACK, onTourImageError } from '../lib/imageFallback';
 import TourReviewForm from './TourReviewForm';
 import {
   type Tour,
@@ -128,7 +129,7 @@ export default function TourDetailModal({
       >
         {/* ── Header image ── */}
         <div className="relative h-52 flex-shrink-0">
-          <img src={tour.coverImage} alt={tour.title} className="w-full h-full object-cover" />
+          <img src={tour.coverImage || TOUR_IMAGE_FALLBACK} onError={onTourImageError} alt={tour.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           <button
             onClick={onClose}
@@ -264,7 +265,7 @@ export default function TourDetailModal({
                     </div>
                     {/* Image */}
                     <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
-                      <img src={stop.image} alt={stop.name} className="w-full h-full object-cover" />
+                      <img src={stop.image || TOUR_IMAGE_FALLBACK} onError={onTourImageError} alt={stop.name} className="w-full h-full object-cover" />
                     </div>
                     {/* Info */}
                     <div className="flex-1 min-w-0">

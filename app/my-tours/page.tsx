@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import TourDetailModal, { PRICE_CONFIG, useTourSaved } from '../components/TourDetailModal';
 import { toggleSavedTour, type Tour } from '../lib/savedTours';
 import { getTours } from '../lib/tours';
+import { TOUR_IMAGE_FALLBACK, onTourImageError } from '../lib/imageFallback';
 
 
 const CATEGORIES = [
@@ -55,7 +56,8 @@ function TourShowcase({ tours, onOpen }: { tours: Tour[]; onOpen: (t: Tour) => v
       {/* Ảnh nền của tour đang active */}
       <img
         key={active.coverImage}
-        src={active.coverImage}
+        src={active.coverImage || TOUR_IMAGE_FALLBACK}
+        onError={onTourImageError}
         alt={active.title}
         className="absolute inset-0 h-full w-full object-cover tour-hero-fade"
       />
@@ -155,7 +157,7 @@ function TourShowcase({ tours, onOpen }: { tours: Tour[]; onOpen: (t: Tour) => v
                   i === activeIndex ? 'scale-105 ring-4 ring-white' : 'opacity-80 hover:scale-105 hover:opacity-100'
                 }`}
               >
-                <img src={t.coverImage} alt={t.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={t.coverImage || TOUR_IMAGE_FALLBACK} onError={onTourImageError} alt={t.title} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-3 text-left">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-white/70">{t.region}</p>
@@ -184,7 +186,8 @@ function TourCard({ tour, onOpen }: { tour: Tour; onOpen: () => void }) {
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={tour.coverImage}
+          src={tour.coverImage || TOUR_IMAGE_FALLBACK}
+          onError={onTourImageError}
           alt={tour.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />

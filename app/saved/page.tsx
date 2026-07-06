@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { getSavedTours, removeSavedTour, SAVED_TOURS_EVENT, type SavedTour } from '../lib/savedTours';
 import { useTourStatus, setTourStatus } from '../lib/tourProgress';
+import { TOUR_IMAGE_FALLBACK, onTourImageError } from '../lib/imageFallback';
 import TourDetailModal from '../components/TourDetailModal';
 
 interface Destination {
@@ -54,7 +55,8 @@ function SavedTourCard({
       <button onClick={() => onOpen('map')} className="block w-full text-left">
         <div className="relative h-48">
           <Image
-            src={tour.coverImage || 'https://via.placeholder.com/400'}
+            src={tour.coverImage || TOUR_IMAGE_FALLBACK}
+            onError={onTourImageError}
             alt={tour.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform"
