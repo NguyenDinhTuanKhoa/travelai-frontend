@@ -945,7 +945,7 @@ export default function AIChatPage() {
               <Image src="/logonew.png" alt="Logo" width={40} height={40} className="rounded-xl shadow-sm" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Travel<span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-violet-500">AI</span> Chat</h1>
-                <p className="text-xs text-gray-500">Powered by GPT-5.5</p>
+                <p className="text-xs text-gray-500">Powered by NVIDIA</p>
               </div>
             </div>
             <Link href="/" className="px-4 py-2 text-gray-500 hover:text-gray-900 transition-colors font-medium">← Về trang chủ</Link>
